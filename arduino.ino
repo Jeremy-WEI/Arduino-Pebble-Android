@@ -134,19 +134,18 @@ void loop()
        Comment out this line if you don't use serial monitor.*/
     if (stop == 0) {
       SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
-    }
-    
-    /* Update RGB LED.*/
-    UpdateRGB (Temperature_H);
-    
-    /* Display temperature on the 7-Segment */
-    if (isCel == 0) {
-      /* Calculate temperature in Fahrenheit*/
-      Fah_temp (FDecimal, FTemperature_H, FIsPositive, Decimal, Temperature_H, IsPositive);
-      Dis_7SEG (FDecimal, FTemperature_H, FTemperature_L, FIsPositive, 0);
-    } else {
-      Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive, 1);
-    }
+        /* Update RGB LED.*/
+      UpdateRGB (Temperature_H);
+      
+      /* Display temperature on the 7-Segment */
+      if (isCel == 0) {
+        /* Calculate temperature in Fahrenheit*/
+        Fah_temp (FDecimal, FTemperature_H, FIsPositive, Decimal, Temperature_H, IsPositive);
+        Dis_7SEG (FDecimal, FTemperature_H, FTemperature_L, FIsPositive, 0);
+      } else {
+        Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive, 1);
+      }
+    }    
       
     delay (timeInterval);        /* Take temperature read every (timeInterval / 1000) second */
     //msg = Serial.read();
