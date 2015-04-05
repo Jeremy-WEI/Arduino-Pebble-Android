@@ -1,26 +1,28 @@
-#ifndef C___helper_h
-#define C___helper_h
+#ifndef C___Helper_h
+#define C___Helper_h
+
+#include <ctime>
 
 class SensorData {
 private:
     double temp;
-    long time;
+    time_t time;
 public:
     SensorData() {}
-    SensorData(double temp, long time) {
+    SensorData(double temp) {
         this -> temp = temp;
-        this -> time = time;
+        time = time(0);
     }
     double getTemp() {
         return temp;
     }
-    long getTime() {
+    time_t getTime() {
         return time;
     }
-    bool isOutOfDate(long currentTime, long duration) {
-        if (currentTime - time >= duration)
-            return false;
-        return true;
+    bool isOutOfDate(int duration) {
+        if (time(0) - time >= duration)
+            return true;
+        return false;
     }
 };
 

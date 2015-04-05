@@ -1,0 +1,17 @@
+Server ¡ª Arduino
+1. receive temp / s (String -> double)
+2. send switch flag to Arduino (char C/F)
+3. maintain a vector of last one hour temps
+4. vector<SensorData> 
+5. standby mode (flag, char 1/0)
+
+Server ¡ª Pebble Watch
+1. request for max/min/avg temp in last hour (Error message?)
+2. 
+3.
+4.
+
+Arduino:
+PebbleWatch:
+1. beautiful UI
+2. 
