@@ -32,7 +32,6 @@ double getMostRecent() {
     double b =  temps[temps.size() - 1];
     pthread_mutex_unlock(&lock2);
     return b;
-  // return 100;
 }
 
 double getLow() {
@@ -122,12 +121,12 @@ void* startServer(void* p)
         
         // buffer to read data into
         
-        cout << "123" <<endl;
-        
         // 5. recv: read incoming message into buffer
         int bytes_received = recv(sfd,request,1024,0);
-        cout << "456" <<endl;
-        
+        if (bytes_received == 0) {
+            close(sfd);
+            continue;
+        }
         cout << "bytes_received" << bytes_received <<endl;
         // null-terminate the string
         request[bytes_received] = '\0';
