@@ -1,5 +1,5 @@
-all: arduino
+all: server
 
-arduino: arduino.c
-	gcc -lpthread -o arduino arduino.c
+server: server.cpp
+	c++ -lpthread -o server server.cpp
 

@@ -134,7 +134,9 @@ void loop()
        Comment out this line if you don't use serial monitor.*/
     if (stop == 0) {
       SerialMonitorPrint (Temperature_H, Decimal, IsPositive);
-        /* Update RGB LED.*/
+      
+    }
+  /* Update RGB LED.*/
       UpdateRGB (Temperature_H);
       
       /* Display temperature on the 7-Segment */
@@ -144,18 +146,17 @@ void loop()
         Dis_7SEG (FDecimal, FTemperature_H, FTemperature_L, FIsPositive, 0);
       } else {
         Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive, 1);
-      }
-    }    
+      }    
       
     delay (timeInterval);        /* Take temperature read every (timeInterval / 1000) second */
-    //msg = Serial.read();
-    if (msg = 'c') {
+    msg = Serial.read();
+    if (msg == 'c') {
       isCel = 1;
-    } else if (msg = 'f') {
+    } else if (msg == 'f') {
       isCel = 0;
-    } else if (msg = 's') {
+    } else if (msg == 's') {
       stop = 1;
-    } else if (msg = 'r') {
+    } else if (msg == 'r') {
       stop = 0;
     }    
   }
