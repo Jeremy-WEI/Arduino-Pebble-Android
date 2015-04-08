@@ -1,5 +1,5 @@
 all: server
 
-server: server.cpp
+server: server.cpp helper.h
 	c++ -lpthread -o server server.cpp
 

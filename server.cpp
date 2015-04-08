@@ -17,56 +17,78 @@
 #include <vector>
 #include <unistd.h>
 #include <sstream>
+#include "helper.h"
 
 using namespace std;
 
+#define DURATION 3600
+
 int fd;
 char message[100];
-vector<double> temps;
-pthread_mutex_t lock2, lock1;
+vector<SensorData> temps;
+pthread_mutex_t lock1, lock2;
 bool running = true;
 int PORT_NUMBER;
 
 double getMostRecent() {
     pthread_mutex_lock(&lock2);
-    double b =  temps[temps.size() - 1];
+    double b =  temps[temps.size() - 1].temp;
     pthread_mutex_unlock(&lock2);
     return b;
 }
 
-double getLow() {
+double getExtreme(int duration, bool isHigh) {
+    double extreme = getMostRecent();
     pthread_mutex_lock(&lock2);
-    int count = 0;
-    double low = 100;
-    for (int i = temps.size() - 1; i >=0 && count < 3600; i--, count++) {
-        count++;
-        if (temps[i] < low) low = temps[i];
+    int i;
+    for (i = temps.size() - 1; i >= 0; i--) {
+        if (temps[i].isOutOfDate(duration)) {
+            break;
+        } else {
+            if (isHigh) { // get highest temperature
+                if (temps[i].temp > extreme) {
+                    extreme = temps[i].temp;
+                } 
+            } else { // get lower temperature
+                if (temps[i].temp < extreme) {
+                    extreme = temps[i].temp;
+                } 
+            }                   
+        }        
+    }
+    if (i > 0) {
+        temps.erase(temps.begin(), temps.begin() + i + 1);
     }
     pthread_mutex_unlock(&lock2);
-    return low;
+    return extreme;
 }
 
-double getHigh() {
-    pthread_mutex_lock(&lock2);
-    int count = 0;
-    double high = 0;
-    for (int i = temps.size() - 1; i >=0 && count < 3600; i--, count++) {
-        count++;
-        if (temps[i] > high) high = temps[i];
-    }
-    pthread_mutex_unlock(&lock2);
-    return high;
+double getLow(int duration) {    
+    return getExtreme(duration, false);
 }
 
-double getAverage() {
-    pthread_mutex_lock(&lock2);
-    int count = 0;
+double getHigh(int duration) {
+    return getExtreme(duration, true);
+}
+
+double getAverage(int duration) {
     double sum = 0;
-    for (int i = temps.size() - 1; i >=0 && count < 3600; i--, count++) {
-        count++;
-        sum += temps[i];
+    int count = 0;
+    pthread_mutex_lock(&lock2);
+    int i;
+    for (i = temps.size() - 1; i >= 0; i--) {
+        if (temps[i].isOutOfDate(duration)) {
+            break;
+        } else {
+            count++;
+            sum += temps[i].temp;                  
+        }        
+    }
+    if (i > 0) {
+        temps.erase(temps.begin(), temps.begin() + i + 1);
     }
     pthread_mutex_unlock(&lock2);
+    if (count == 0) return 0;
     return sum/count;
 }
 
@@ -147,21 +169,21 @@ void* startServer(void* p)
         }
         
         if (command.compare("avgTemp") == 0) {
-            reply << "{\n\"msg\": \"Average temperature is " << getAverage() <<"\"\n}\n";
+            reply << "{\n\"msg\": \"Average temperature is " << getAverage(DURATION) <<"\"\n}\n";
             cout << "Server sent message: " << reply.str() << endl;
             string s = reply.str();
             send(sfd, s.c_str(), s.length(), 0);
         }
         
         if (command.compare("highTemp") == 0) {
-            reply << "{\n\"msg\": \"The highest temperature is " << getHigh() <<"\"\n}\n";
+            reply << "{\n\"msg\": \"The highest temperature is " << getHigh(DURATION) <<"\"\n}\n";
             cout << "Server sent message: " << reply.str() << endl;
             string s = reply.str();
             send(sfd, s.c_str(), s.length(), 0);
         }
         
         if (command.compare("lowTemp") == 0) {
-            reply << "{\n\"msg\": \"The lowest temperature is " << getLow() <<"\"\n}\n";
+            reply << "{\n\"msg\": \"The lowest temperature is " << getLow(DURATION) <<"\"\n}\n";
             cout << "Server sent message: " << reply.str() << endl;
             string s = reply.str();
             send(sfd, s.c_str(), s.length(), 0);
@@ -238,8 +260,9 @@ void* getTem(void* p) {
                     if (count == 3600) count = 0;
                     if (count >= 0) {
                         pthread_mutex_lock(&lock2);
-                        temps.push_back(temp);
-                        cout << count <<"   " << temps[count] << endl;
+                        SensorData tempClass(temp);
+                        temps.push_back(tempClass);
+                        cout << count << " " << temps[count].temp << endl;
                         pthread_mutex_unlock(&lock2);
                         
                     }

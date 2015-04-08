@@ -3,24 +3,25 @@
 
 #include <ctime>
 
+using namespace std;
+
 class SensorData {
-private:
-    double temp;
-    time_t time;
 public:
+    double temp;
+    time_t timeStamp;
     SensorData() {}
     SensorData(double temp) {
         this -> temp = temp;
-        time = time(0);
+        timeStamp = time(0);
     }
     double getTemp() {
         return temp;
     }
     time_t getTime() {
-        return time;
+        return timeStamp;
     }
     bool isOutOfDate(int duration) {
-        if (time(0) - time >= duration)
+        if (time(0) - timeStamp >= duration)
             return true;
         return false;
     }
