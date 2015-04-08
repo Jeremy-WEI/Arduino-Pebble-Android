@@ -2,6 +2,25 @@
 #define C___Helper_h
 
 #include <ctime>
+#include <sys/types.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <math.h>
+#include <signal.h>
+#include <string.h>
+#include <termios.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <string>
+#include <iostream>
+#include <vector>
+#include <unistd.h>
+#include <sstream>
 
 using namespace std;
 
