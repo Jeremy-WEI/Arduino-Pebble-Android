@@ -10,6 +10,7 @@ double getHigh(int);
 double CToF(double);
 double getMostRecent();
 double getExtreme(int, bool);
+void sendTemp(stringstream&, string, double, bool);
 void* startServer(void*);
 void* getTem(void*);
 
@@ -70,7 +71,7 @@ void* startServer(void* p)
         perror("Unable to bind");
         exit(1);
     }
-    2
+    
     // 3. listen: indicates that we want to listen to the port to which we bound; second arg is number of allowed connections
     if (listen(sock, 1) == -1) {
         perror("Listen");
@@ -109,39 +110,35 @@ void* startServer(void* p)
         char *token = strtok(request, " ");
         token = strtok(NULL, " ");
         string command(token + 1);
-        if (command.compare("curTemp") == 0) {
-            if (isCelsius) reply << "{\n\"msg\": \"Current Temperature is " << fixed << setprecision(2) << getMostRecent() <<" °C.\"\n}\n";
-            else reply << "{\n\"msg\": \"Current Temperature is " << CToF(getMostRecent()) <<" °F.\"\n}\n";            
+        if (command == "curTemp") {
+            sendTemp(reply, "Current Temperature is", getMostRecent(), isCelsius);      
+        }
+        else if (command == "avgTemp") {
+            sendTemp(reply, "Average Temperature is", getAverage(DURATION), isCelsius);
         }        
-        else if (command.compare("avgTemp") == 0) {
-            if (isCelsius) reply << "{\n\"msg\": \"Average Temperature is " << getAverage(DURATION) <<" °C.\"\n}\n";
-            else reply << "{\n\"msg\": \"Average Temperature is " << CToF(getAverage(DURATION)) <<" °F.\"\n}\n";
+        else if (command == "highTemp") {
+            sendTemp(reply, "The Highest Temperature is", getHigh(DURATION), isCelsius);
         }        
-        else if (command.compare("highTemp") == 0) {
-            if (isCelsius) reply << "{\n\"msg\": \"The Highest Temperature is " << getHigh(DURATION) <<" °C.\"\n}\n";
-            else reply << "{\n\"msg\": \"The Highest Temperature is " << CToF(getHigh(DURATION)) <<" °F.\"\n}\n";
-        }        
-        else if (command.compare("lowTemp") == 0) {
-            if (isCelsius) reply << "{\n\"msg\": \"The Lowest Temperature is " << getLow(DURATION) <<" °C.\"\n}\n";
-            else reply << "{\n\"msg\": \"The Lowest Temperature is " << CToF(getLow(DURATION)) <<" °F.\"\n}\n";
+        else if (command == "lowTemp") {
+            sendTemp(reply, "The Lowest Temperature is", getLow(DURATION), isCelsius);
         } 
-        else if (command.compare("showF") == 0) {
+        else if (command == "showF") {
             isCelsius = false;
             reply << "{\n\"msg\": \"Temperature Now in Fahrenheit\"\n}\n";
-            int bytes_written = write(fd, "f", 1);
+            write(fd, "f", 1);
         }        
-        else if (command.compare("showC") == 0) {
+        else if (command == "showC") {
             isCelsius = true;
             reply << "{\n\"msg\": \"Temperature Now in Celsius\"\n}\n";
-            int bytes_written = write(fd, "c", 1);
+            write(fd, "c", 1);
         }        
-        else if (command.compare("stop") == 0) {
-            reply << "{\n\"msg\": \"Now Temperature Reporting Stopped.\"\n}\n";
-            int bytes_written = write(fd, "s", 1);
+        else if (command == "stop") {
+            reply << "{\n\"msg\": \"Temperature Reporting Stopped.\"\n}\n";
+            write(fd, "s", 1);
         }        
-        else if (command.compare("resume") == 0) {
-            reply << "{\n\"msg\": \"Now Temperature Reporting Resumed.\"\n}\n";         
-            int bytes_written = write(fd, "r", 1);
+        else if (command == "resume") {
+            reply << "{\n\"msg\": \"Temperature Reporting Resumed.\"\n}\n";
+            write(fd, "r", 1);
         }
         
         // 6. send: send the message over the socket
@@ -275,3 +272,16 @@ double getAverage(int duration) {
     if (count == 0) return 0;
     return sum/count;
 }
+
+void sendTemp(stringstream& reply, string msg, double temp, bool isCelsius) {
+    if (!isCelsius) 
+        temp = CToF(temp);
+    reply << "{\n\"msg\": \"" << msg << " " << fixed << setprecision(2) << temp << (isCelsius ? " °C" : " °F" )<< ".\"\n}\n";
+}
+
+
+
+
+
+
+
