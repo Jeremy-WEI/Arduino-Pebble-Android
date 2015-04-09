@@ -27,7 +27,7 @@ int main(int argc, char const *argv[])
     cout << PORT_NUMBER << endl;
     fd = open("/dev/cu.usbmodem1411", O_RDWR);
     // if open returns -1, something went wrong!
-    if (fd == -1) return 1;
+    // if (fd == -1) return 1;
     pthread_mutex_init(&lock2, NULL);
     pthread_mutex_init(&lock1, NULL);
     pthread_t t1, t2;
@@ -103,44 +103,50 @@ void* startServer(void* p)
         request[bytes_received] = '\0';
         
         cout << request << endl;
+
         // this is the message that we'll send back
         // for now, it's just a copy of what we received
         stringstream reply;
         reply << "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
-        char *token = strtok(request, " ");
-        token = strtok(NULL, " ");
-        string command(token + 1);
-        if (command == "curTemp") {
-            sendTemp(reply, "Current Temperature is", getMostRecent(), isCelsius);      
+
+        if (fd == -1) {
+            reply << "{\n\"msg\": \"Arduino Not Connected.\"\n}\n";
         }
-        else if (command == "avgTemp") {
-            sendTemp(reply, "Average Temperature is", getAverage(DURATION), isCelsius);
-        }        
-        else if (command == "highTemp") {
-            sendTemp(reply, "The Highest Temperature is", getHigh(DURATION), isCelsius);
-        }        
-        else if (command == "lowTemp") {
-            sendTemp(reply, "The Lowest Temperature is", getLow(DURATION), isCelsius);
-        } 
-        else if (command == "showF") {
-            isCelsius = false;
-            reply << "{\n\"msg\": \"Temperature Now in Fahrenheit\"\n}\n";
-            write(fd, "f", 1);
-        }        
-        else if (command == "showC") {
-            isCelsius = true;
-            reply << "{\n\"msg\": \"Temperature Now in Celsius\"\n}\n";
-            write(fd, "c", 1);
-        }        
-        else if (command == "stop") {
-            reply << "{\n\"msg\": \"Temperature Reporting Stopped.\"\n}\n";
-            write(fd, "s", 1);
-        }        
-        else if (command == "resume") {
-            reply << "{\n\"msg\": \"Temperature Reporting Resumed.\"\n}\n";
-            write(fd, "r", 1);
+        else {
+            char *token = strtok(request, " ");
+            token = strtok(NULL, " ");
+            string command(token + 1);
+            if (command == "curTemp") {
+                sendTemp(reply, "Current Temperature is", getMostRecent(), isCelsius);      
+            }
+            else if (command == "avgTemp") {
+                sendTemp(reply, "Average Temperature is", getAverage(DURATION), isCelsius);
+            }        
+            else if (command == "highTemp") {
+                sendTemp(reply, "The Highest Temperature is", getHigh(DURATION), isCelsius);
+            }        
+            else if (command == "lowTemp") {
+                sendTemp(reply, "The Lowest Temperature is", getLow(DURATION), isCelsius);
+            } 
+            else if (command == "showF") {
+                isCelsius = false;
+                reply << "{\n\"msg\": \"Temperature Now in Fahrenheit.\"\n}\n";
+                write(fd, "f", 1);
+            }        
+            else if (command == "showC") {
+                isCelsius = true;
+                reply << "{\n\"msg\": \"Temperature Now in Celsius.\"\n}\n";
+                write(fd, "c", 1);
+            }        
+            else if (command == "stop") {
+                reply << "{\n\"msg\": \"Temperature Reporting Stopped.\"\n}\n";
+                write(fd, "s", 1);
+            }        
+            else if (command == "resume") {
+                reply << "{\n\"msg\": \"Temperature Reporting Resumed.\"\n}\n";
+                write(fd, "r", 1);
+            }
         }
-        
         // 6. send: send the message over the socket
         // note that the second argument is a char*, and the third is the number of chars
         //send(fd, reply, strlen(reply), 0);
@@ -167,6 +173,8 @@ void* getTem(void* p) {
     char buf[100];
     int count = -2;
     buf[0] = '\0';
+    if (fd == -1) 
+        return NULL;
     while (true) {
         pthread_mutex_lock(&lock1);
         if(!running) break;
@@ -203,8 +211,7 @@ void* getTem(void* p) {
         }
     }
     pthread_mutex_unlock(&lock1);
-    
-    return 0;
+    return NULL;
 }
 
 double CToF(double cTemp) {
