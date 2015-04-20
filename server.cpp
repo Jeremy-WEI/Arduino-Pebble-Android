@@ -298,8 +298,8 @@ void sendTemps(stringstream& reply, bool isCelsius) {
         double temp = temps[i].temp;
         if (!isCelsius) temp = CToF(temp);
         sum += temp;
-        if (count % 5 == 0) {
-            reply << sum / 5 << ",";
+        if (count % 6 == 0) {
+            reply << sum / 6 << ",";
             sum = 0;
         }                        
     }
