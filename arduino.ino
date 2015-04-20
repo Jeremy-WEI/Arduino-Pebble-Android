@@ -19,6 +19,7 @@
 ****************************************************************************/
 
 #include <Wire.h> 
+#include <math.h>
  
 #define BAUD (9600)    /* Serial baud define */
 #define _7SEG (0x38)   /* I2C address for 7-Segment */
@@ -34,6 +35,7 @@
 const byte NumberLookup[16] =   {0x3F,0x06,0x5B,0x4F,0x66,
                                  0x6D,0x7D,0x07,0x7F,0x6F, 
                                  0x77,0x7C,0x39,0x5E,0x79,0x71};
+const byte CharLookup[7] =   {0x3F,0x3E,0x31,0x6D,0x39,0x40, 0x71};//O U T S C - F
 
 /* Function prototypes */
 void Cal_temp (int&, byte&, byte&, bool&);
@@ -41,6 +43,8 @@ void Dis_7SEG (int, byte, byte, bool);
 void Send7SEG (byte, byte);
 void SerialMonitorPrint (byte, int, bool);
 void UpdateRGB (byte);
+void DisMsg (String, String);
+void clearDisplay();
 
 /***************************************************************************
  Function Name: setup
@@ -68,7 +72,8 @@ void setup()
  
 void loop() 
 { 
-  char msg = '*';
+  //char msg = '*';
+  String msg = "";
   int Decimal, FDecimal = 0, timeInterval = 1000;
   byte Temperature_H, Temperature_L, FTemperature_H = 0, FTemperature_L = 0, counter, counter2;
   bool IsPositive, FIsPositive = 0, stop = 0, isCel = 1;
@@ -147,21 +152,67 @@ void loop()
       } else {
         Dis_7SEG (Decimal, Temperature_H, Temperature_L, IsPositive, 1);
       }    
-      
-    delay (timeInterval);        /* Take temperature read every (timeInterval / 1000) second */
-    msg = Serial.read();
-    if (msg == 'c') {
+      delay (timeInterval);  
+           /* Take temperature read every (timeInterval / 1000) second */
+    msg=Serial.readString(); 
+   // msg = Serial.read();
+    if (msg.equals("c")) {
       isCel = 1;
-    } else if (msg == 'f') {
+    } else if (msg.equals("f")) {
       isCel = 0;
-    } else if (msg == 's') {
+    } else if (msg.equals("s")) {
       stop = 1;
-    } else if (msg == 'r') {
+    } else if (msg.equals("r")) {
       stop = 0;
+    } else if (msg.startsWith("tmp")) {
+      DisMsg("out",msg);
+      
+    }  else if (msg.startsWith("stk")) {
+      DisMsg("stoc",msg);
     }    
   }
 } 
+/* display the received message on 7-segment display*/
+void DisMsg (String prefix, String msg)
+{
+  msg = msg.substring(3);
+  prefix += msg;
+  int Number;
+  for (int i = 0; i < prefix.length();i++){
+    int startIndex = i;
+    for (int Digit = 4; Digit > 0; Digit--) {
+      if (prefix.charAt(startIndex) == '.') {
+        Send7SEG (Digit,B10000000);
+      } 
+      else if (prefix.charAt(startIndex) == 'o') Send7SEG (Digit,CharLookup[0]); 
+      else if (prefix.charAt(startIndex) == 'u') Send7SEG (Digit,CharLookup[1]);
+      else if (prefix.charAt(startIndex) == 't') Send7SEG (Digit,CharLookup[2]);
+      else if (prefix.charAt(startIndex) == 's') Send7SEG (Digit,CharLookup[3]);
+      else if (prefix.charAt(startIndex) == 'c') Send7SEG (Digit,CharLookup[4]);
+      else if (prefix.charAt(startIndex) == '-') Send7SEG (Digit,CharLookup[5]); 
+      else if (prefix.charAt(startIndex) == 'f') Send7SEG (Digit,CharLookup[6]); 
+      else {
+        Number = prefix.charAt(startIndex) - '0';      
+        Send7SEG (Digit,NumberLookup[Number]); 
+      }      
+      startIndex++;
+      if (startIndex >= prefix.length()) break;
+      if (prefix.charAt(startIndex) == '.') {
+        Send7SEG (Digit, NumberLookup[Number] | B10000000);
+        startIndex++;
+        if (startIndex >= prefix.length()) break;
+      } 
+    }    
+    delay (1000);
+    clearDisplay();  
+  }
+}
 
+void clearDisplay(){
+  for (int Digit = 4; Digit>0;Digit--){
+    Send7SEG(Digit,0x00); 
+  }
+}
 /***************************************************************************
  Function Name: Fah_temp
 
@@ -338,5 +389,6 @@ void SerialMonitorPrint (byte Temperature_H, int Decimal, bool IsPositive)
     Serial.print("E\n");
 }
     
+
 
 
