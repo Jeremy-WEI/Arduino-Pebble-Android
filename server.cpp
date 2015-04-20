@@ -13,6 +13,7 @@ double getExtreme(int, bool);
 void sendTemp(stringstream&, string, double, bool);
 void* startServer(void*);
 void* getTem(void*);
+void sendTemps(stringstream& reply, bool isCelsius);
 
 int fd;
 char message[100];
@@ -118,6 +119,9 @@ void* startServer(void* p)
             string command(token + 1);
             if (command == "curTemp") {
                 sendTemp(reply, "Current Temperature is", getMostRecent(), isCelsius);      
+            } 
+            else if (command == "temps") {
+                sendTemps(reply, isCelsius);
             }
             else if (command == "avgTemp") {
                 sendTemp(reply, "Average Temperature is", getAverage(DURATION), isCelsius);
@@ -284,6 +288,22 @@ void sendTemp(stringstream& reply, string msg, double temp, bool isCelsius) {
     if (!isCelsius) 
         temp = CToF(temp);
     reply << "{\n\"msg\": \"" << msg << " " << fixed << setprecision(2) << temp << (isCelsius ? " °C" : " °F" )<< ".\"\n}\n";
+}
+
+void sendTemps(stringstream& reply, bool isCelsius) {
+    double sum = 0;
+    int count = 1;
+    pthread_mutex_lock(&lock2);
+    for (int i = temps.size() - 1; i >= temps.size() - 60; i--, count++) {
+        double temp = temps[i].temp;
+        if (!isCelsius) temp = CToF(temp);
+        sum += temp;
+        if (count % 6 == 0) {
+            reply << sum / 6 << ",";
+            sum = 0;
+        }                        
+    }
+    pthread_mutex_unlock(&lock2);
 }
 
 
