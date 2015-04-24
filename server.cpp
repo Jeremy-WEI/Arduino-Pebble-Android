@@ -150,7 +150,15 @@ void* startServer(void* p)
                 reply << "{\n\"msg\": \"Temperature Reporting Resumed.\"\n}\n";
                 write(fd, "r", 1);
             }
-        }
+            else if (command.find("weather") != string::npos) {
+                string msg = "tmp" + command.substr(7);
+                write(fd, msg.c_str(), msg.length());
+            }
+            else if (command.find("stock") != string::npos) {
+                cout << msg << endl;
+                write(fd, msg.c_str(), msg.length());
+            }
+         }
         // 6. send: send the message over the socket
         // note that the second argument is a char*, and the third is the number of chars
         //send(fd, reply, strlen(reply), 0);
@@ -294,6 +302,7 @@ void sendTemps(stringstream& reply, bool isCelsius) {
     double sum = 0;
     int count = 1;
     pthread_mutex_lock(&lock2);
+    reply << "{\n\"msg\": \"";
     for (int i = temps.size() - 1; i >= temps.size() - 60; i--, count++) {
         double temp = temps[i].temp;
         if (!isCelsius) temp = CToF(temp);
@@ -301,8 +310,9 @@ void sendTemps(stringstream& reply, bool isCelsius) {
         if (count % 6 == 0) {
             reply << sum / 6 << ",";
             sum = 0;
-        }                        
+        }                  
     }
+    reply << "\"\n}\n";
     pthread_mutex_unlock(&lock2);
 }
 
