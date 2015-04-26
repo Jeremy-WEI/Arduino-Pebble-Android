@@ -2,11 +2,12 @@
 #include <string.h>
 #include <stdlib.h> 
 
-#define NUM_MENU_SECTIONS 3
+#define NUM_MENU_SECTIONS 4
 #define NUM_MENU_ICONS 3
 #define NUM_FIRST_MENU_ITEMS 5
 #define NUM_SECOND_MENU_ITEMS 2
 #define NUM_THIRD_MENU_ITEMS 2
+#define NUM_FOURTH_MENU_ITEMS 2
 
 static Window *window;
 static Layer *canvas_layer;
@@ -81,12 +82,12 @@ static void layer_graph_update_callback(Layer *layer, GContext *ctx) {
   graphics_draw_line(ctx, GPoint(2, 2), GPoint(width + 8, 2));
   graphics_draw_line(ctx, GPoint(2, height + 8), GPoint(width + 8, height + 8));
   graphics_draw_line(ctx, GPoint(width + 8, 2), GPoint(width + 8, height + 8));
-  char buf[] = "60.21,67.21,25.21,90.21,61.21,44.21,50.21,61.21,30.21,70.00,";
+//   char buf[] = "60.21,67.21,25.21,90.21,61.21,44.21,50.21,61.21,30.21,70.00,";
   char number[10];
-  int len = strlen(buf);
+  int len = strlen(msg);
   for (int i = 0, k = 0, j = 0; i < len; i++) {
-    if (buf[i] != ',')
-      number[k++] = buf[i];
+    if (msg[i] != ',')
+      number[k++] = msg[i];
     else {
       number[k] = '\0';
       numbers[j++] = myatof(number);
@@ -145,6 +146,8 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer, uint16_t secti
             return NUM_SECOND_MENU_ITEMS;
         case 2:
             return NUM_THIRD_MENU_ITEMS;
+        case 3:
+            return NUM_FOURTH_MENU_ITEMS;
         default:
             return 0;
     }
@@ -166,6 +169,8 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
             break;
         case 2:
             menu_cell_basic_header_draw(ctx, cell_layer, "Arduino Control");
+        case 3:
+            menu_cell_basic_header_draw(ctx, cell_layer, "Additional Features");
             break;
     }
 }
@@ -190,7 +195,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
                     menu_cell_basic_draw(ctx, cell_layer, "Lowest Temp", "query...", s_menu_icons[2]);
                     break;
                 case 4:
-                    menu_cell_basic_draw(ctx, cell_layer, "Temp History", "query...", s_menu_icons[2]);
+                    menu_cell_basic_draw(ctx, cell_layer, "Temp History", "In Last Minute...", s_menu_icons[2]);
                     break;
             }
             break;
@@ -211,6 +216,16 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
                     break;
                 case 1:
                     menu_cell_basic_draw(ctx, cell_layer, "Active Mode", "control...", s_menu_icons[2]);
+                    break;
+            }
+            break;
+        case 3:
+            switch (cell_index->row) {
+                case 0:
+                    menu_cell_basic_draw(ctx, cell_layer, "Weather Report", "connect...", s_menu_icons[2]);
+                    break;
+                case 1:
+                    menu_cell_basic_draw(ctx, cell_layer, "Stock Price", "look up...", s_menu_icons[2]);
                     break;
             }
             break;
@@ -242,6 +257,7 @@ void in_received_handler(DictionaryIterator *received, void *context) {
             // put it in this global variable
             char *message = text_tuple->value->cstring;
             if (message[strlen(message) - 1] == ',') {
+              strcpy(msg, message);
               layer_set_update_proc(canvas_layer, layer_graph_update_callback);
               layer_mark_dirty(canvas_layer);
             }
@@ -303,6 +319,16 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
                     break;
                 case 1:
                     send_message("resume", "Arduino Active Mode.");
+                    break;
+            }
+            break;
+         case 3:
+            switch (cell_index->row) {
+                case 0:
+                    send_message("weather", "Query Weather in Philly.");
+                    break;
+                case 1:
+                    send_message("stock", "Query Yahoo! Stock Price.");
                     break;
             }
             break;
