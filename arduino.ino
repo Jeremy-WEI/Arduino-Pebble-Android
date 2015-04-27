@@ -212,12 +212,12 @@ void DisMsg (String prefix, String msg)
     delay (1000);
     clearDisplay();  
   }
+  digitalWrite(RED, LOW);
+  digitalWrite(GREEN, LOW);
 }
 
 void clearDisplay(){
-  digitalWrite(RED, LOW);
-  digitalWrite(GREEN, LOW);
-  for (int Digit = 4; Digit>0;Digit--){
+  for (int Digit = 4; Digit>igit--){
     Send7SEG(Digit,0x00); 
   }
 }

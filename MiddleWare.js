@@ -10,7 +10,7 @@ Pebble.addEventListener("appmessage",
             sendToServer(e.payload[0]);
     });
 
-var ipAddress = "158.130.215.67"; // Hard coded IP address
+var ipAddress = "158.130.212.105"; // Hard coded IP address
 var port = "3001"; // Same port specified as argument to server
 
 function sendToServer(param) {
@@ -19,6 +19,12 @@ function sendToServer(param) {
     var url = "http://" + ipAddress + ":" + port + "/" + param;
     var method = "GET";
     var async = true;
+  
+    req.ontimeout = function () {
+      Pebble.sendAppMessage({
+            "0": "Connection Failed. Server is not Available."
+        });
+    };
 
     req.onload = function(e) {
         // see what came back
@@ -35,6 +41,7 @@ function sendToServer(param) {
         });
     };
     req.open(method, url, async);
+    req.timeout = 3000;
     req.send(null);
 }
 
@@ -52,6 +59,12 @@ function queryWeather() {
     var url = "http://api.openweathermap.org/data/2.5/weather?zip=19104%2Cus";
     var method = "GET";
     var async = true;
+  
+    req.ontimeout = function () {
+      Pebble.sendAppMessage({
+            "0": "Connection Failed. Server is not Available."
+        });
+    };
 
     req.onload = function(e) {
         // see what came back
@@ -72,6 +85,7 @@ function queryWeather() {
         });
     };
     req.open(method, url, async);
+    req.timeout = 3000;
     req.send(null);
 }
 
@@ -81,6 +95,12 @@ function queryStock() {
     var method = "GET";
     var async = true;
     console.log('Send Request');
+  
+    req.ontimeout = function () {
+      Pebble.sendAppMessage({
+            "0": "Connection Failed. Server is not Available."
+        });
+    };
 
     req.onload = function(e) {
         // see what came back
@@ -91,7 +111,7 @@ function queryStock() {
             if (response.query) {
                 var price = response.query.results.quote.LastTradePriceOnly;
                 msg = "Yahoo! Stock Price: $" + price;
-                sendToServerNoResponse('stock' + price);
+              sendToServerNoResponse('stock' + (parseFloat(response.query.results.quote.Change) >= 0 ? '+' : '-') + price);
             } else msg = "No Stock Price Available";
         }
         // sends message back to pebble
@@ -100,5 +120,6 @@ function queryStock() {
         });
     };
     req.open(method, url, async);
+    req.timeout = 3000;
     req.send(null);
 }
