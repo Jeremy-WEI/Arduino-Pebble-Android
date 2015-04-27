@@ -177,7 +177,7 @@ void DisMsg (String prefix, String msg)
 {
   if (msg.charAt(0)=='s') { // stock
   if (msg.charAt(3)=='-') digitalWrite(RED, HIGH);  
-  else if (msg.charAt(3)=='+') digitalWrite(GREEN, HIGH);
+  else digitalWrite(GREEN, HIGH);
   msg = msg.substring(4);
   } else {
     msg = msg.substring(3);
@@ -216,8 +216,13 @@ void DisMsg (String prefix, String msg)
   digitalWrite(GREEN, LOW);
 }
 
+<<<<<<< HEAD
 void clearDisplay(){
   for (int Digit = 4; Digit>igit--){
+=======
+void clearDisplay(){  
+  for (int Digit = 4; Digit>0;Digit--){
+>>>>>>> 46af1cbe4f2a6a9c9eb378d1777bed6896bdc2fb
     Send7SEG(Digit,0x00); 
   }
 }
