@@ -19,12 +19,6 @@ function sendToServer(param) {
     var url = "http://" + ipAddress + ":" + port + "/" + param;
     var method = "GET";
     var async = true;
-  
-    req.ontimeout = function () {
-      Pebble.sendAppMessage({
-            "0": "Connection Failed. Server is not Available."
-        });
-    };
 
     req.onload = function(e) {
         // see what came back
@@ -40,8 +34,18 @@ function sendToServer(param) {
             "0": msg
         });
     };
-    req.open(method, url, async);
-    req.timeout = 3000;
+    req.onerror = function () {
+      Pebble.sendAppMessage({
+            "0": "Connection Failed. Server is not Available."
+        });
+    };
+    req.open(method, url, async);  
+//     req.timeout = 3000;
+//     req.ontimeout = function () {
+//       Pebble.sendAppMessage({
+//             "0": "Connection Failed. Server is not Available."
+//         });
+//     };
     req.send(null);
 }
 
@@ -60,11 +64,11 @@ function queryWeather() {
     var method = "GET";
     var async = true;
   
-    req.ontimeout = function () {
-      Pebble.sendAppMessage({
-            "0": "Connection Failed. Server is not Available."
-        });
-    };
+//     req.ontimeout = function () {
+//       Pebble.sendAppMessage({
+//             "0": "Connection Failed. Server is not Available."
+//         });
+//     };
 
     req.onload = function(e) {
         // see what came back
@@ -84,8 +88,13 @@ function queryWeather() {
             "0": msg
         });
     };
+    req.onerror = function () {
+      Pebble.sendAppMessage({
+            "0": "Connection Failed. Server is not Available."
+        });
+    };
     req.open(method, url, async);
-    req.timeout = 3000;
+//     req.timeout = 3000;
     req.send(null);
 }
 
@@ -96,11 +105,11 @@ function queryStock() {
     var async = true;
     console.log('Send Request');
   
-    req.ontimeout = function () {
-      Pebble.sendAppMessage({
-            "0": "Connection Failed. Server is not Available."
-        });
-    };
+//     req.ontimeout = function () {
+//       Pebble.sendAppMessage({
+//             "0": "Connection Failed. Server is not Available."
+//         });
+//     };
 
     req.onload = function(e) {
         // see what came back
@@ -119,7 +128,12 @@ function queryStock() {
             "0": msg
         });
     };
+    req.onerror = function () {
+      Pebble.sendAppMessage({
+            "0": "Connection Failed. Server is not Available."
+        });
+    };
     req.open(method, url, async);
-    req.timeout = 3000;
+//     req.timeout = 3000;
     req.send(null);
 }

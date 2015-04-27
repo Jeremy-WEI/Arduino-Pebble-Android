@@ -155,6 +155,7 @@ void* startServer(void* p)
                 write(fd, msg.c_str(), msg.length());
             }
             else if (command.find("stock") != string::npos) {
+                string msg = "stk" + command.substr(5);
                 cout << msg << endl;
                 write(fd, msg.c_str(), msg.length());
             }
@@ -176,53 +177,56 @@ void* startServer(void* p)
 
 
 void* getTem(void* p) {
-    struct termios options;
-    tcgetattr(fd, &options);
-    cfsetispeed(&options, 9600);
-    cfsetospeed(&options, 9600);
-    tcsetattr(fd, TCSANOW, &options);
-    bool flag = false;
-    char buf[100];
-    int count = -2;
-    buf[0] = '\0';
-    if (fd == -1) 
-        return NULL;
-    while (true) {
-        pthread_mutex_lock(&lock1);
-        if(!running) break;
-        pthread_mutex_unlock(&lock1);
-        int bytes_read = read(fd, buf, 100);
-        if (bytes_read != 0) {
-            buf[bytes_read] = '\0';
-            
-            if (flag) {
-                //cout << message << endl;
-                try {
-                    double temp = atof(message + 1);
-                    count++;
-                    if (count == 3600) count = 0;
-                    if (count >= 0) {
-                        pthread_mutex_lock(&lock2);
-                        SensorData tempClass(temp);
-                        temps.push_back(tempClass);
-                        cout << count << " " << temps[count].temp << endl;
-                        pthread_mutex_unlock(&lock2);
-                        
+    try {
+        struct termios options;
+        tcgetattr(fd, &options);
+        cfsetispeed(&options, 9600);
+        cfsetospeed(&options, 9600);
+        tcsetattr(fd, TCSANOW, &options);
+        bool flag = false;
+        char buf[100];
+        int count = -2;
+        buf[0] = '\0';
+        if (fd == -1) 
+            return NULL;
+        while (true) {
+            pthread_mutex_lock(&lock1);
+            if(!running) break;
+            pthread_mutex_unlock(&lock1);
+            int bytes_read = read(fd, buf, 100);
+            if (bytes_read != 0) {
+                buf[bytes_read] = '\0';
+                
+                if (flag) {
+                    //cout << message << endl;
+                    try {
+                        double temp = atof(message + 1);
+                        count++;
+                        if (count == 3600) count = 0;
+                        if (count >= 0) {
+                            pthread_mutex_lock(&lock2);
+                            SensorData tempClass(temp);
+                            temps.push_back(tempClass);
+                            cout << count << " " << temps[count].temp << endl;
+                            pthread_mutex_unlock(&lock2);
+                            
+                        }
+                    } catch(exception) {
+                        cout << "fail" << message << endl;
                     }
-                } catch(exception) {
-                    cout << "fail" << message << endl;
+                    message[0] = '\0';
+                    flag = false;
                 }
-                message[0] = '\0';
-                flag = false;
-            }
-            
-            strcat(message, buf);
-            if (buf[bytes_read - 1] == '\n') {
-                flag = true;
+                
+                strcat(message, buf);
+                if (buf[bytes_read - 1] == '\n') {
+                    flag = true;
+                }
             }
         }
+        pthread_mutex_unlock(&lock1);
     }
-    pthread_mutex_unlock(&lock1);
+    catch (...) {}
     return NULL;
 }
 
