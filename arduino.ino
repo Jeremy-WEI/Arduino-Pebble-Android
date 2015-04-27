@@ -165,21 +165,27 @@ void loop()
     } else if (msg.equals("r")) {
       stop = 0;
     } else if (msg.startsWith("tmp")) {
-      DisMsg("out",msg);
-      
+      DisMsg("out",msg);      
     }  else if (msg.startsWith("stk")) {
       DisMsg("stoc",msg);
     }    
   }
 } 
-/* display the received message on 7-segment display*/
+
+/***************************************************************************
+ Function Name: DisMsg
+
+ Purpose: 
+   Display the received message on 7-segment display.
+****************************************************************************/
+
 void DisMsg (String prefix, String msg)
 {
   if (msg.charAt(0)=='s') { // stock
   if (msg.charAt(3)=='-') digitalWrite(RED, HIGH);  
   else digitalWrite(GREEN, HIGH);
   msg = msg.substring(4);
-  } else {
+  } else {  // temp
     msg = msg.substring(3);
   }  
   prefix += msg;
@@ -216,17 +222,26 @@ void DisMsg (String prefix, String msg)
   digitalWrite(GREEN, LOW);
 }
 
+/***************************************************************************
+ Function Name: clearDisplay
+
+ Purpose: 
+   Clear the 7-segment display.
+****************************************************************************/
+
 void clearDisplay(){  
   for (int Digit = 4; Digit>0;Digit--){
     Send7SEG(Digit,0x00); 
   }
 }
+
 /***************************************************************************
  Function Name: Fah_temp
 
  Purpose: 
    Calculate temperature from Celsius to Fahrenheit.
 ****************************************************************************/
+
 void Fah_temp (int& FDecimal, byte& FHigh, bool& Fsign, int CDecimal, byte CHigh, bool Csign)
 {
   double Celsius, Fahrenheit;
@@ -250,6 +265,7 @@ void Fah_temp (int& FDecimal, byte& FHigh, bool& Fsign, int CDecimal, byte CHigh
  Purpose: 
    Calculate temperature from raw data.
 ****************************************************************************/
+
 void Cal_temp (int& Decimal, byte& High, byte& Low, bool& sign)
 {
   if ((High&B10000000)==0x80)    /* Check for negative temperature. */
@@ -276,6 +292,7 @@ void Cal_temp (int& Decimal, byte& High, byte& Low, bool& sign)
  Purpose: 
    Display number on the 7-segment display.
 ****************************************************************************/
+
 void Dis_7SEG (int Decimal, byte High, byte Low, bool sign, bool isCel)
 {
   byte Digit = 4;                 /* Number of 7-Segment digit */
@@ -384,6 +401,7 @@ void UpdateRGB (byte Temperature_H)
  Purpose: 
    Print current read temperature to the serial monitor.
 ****************************************************************************/
+
 void SerialMonitorPrint (byte Temperature_H, int Decimal, bool IsPositive)
 {
     Serial.print("S");
@@ -396,7 +414,4 @@ void SerialMonitorPrint (byte Temperature_H, int Decimal, bool IsPositive)
     Serial.print(Decimal, DEC);
     Serial.print("E\n");
 }
-    
-
-
 
