@@ -175,7 +175,13 @@ void loop()
 /* display the received message on 7-segment display*/
 void DisMsg (String prefix, String msg)
 {
-  msg = msg.substring(3);
+  if (msg.charAt(0)=='s') { // stock
+  if (msg.charAt(3)=='-') digitalWrite(RED, HIGH);  
+  else if (msg.charAt(3)=='+') digitalWrite(GREEN, HIGH);
+  msg = msg.substring(4);
+  } else {
+    msg = msg.substring(3);
+  }  
   prefix += msg;
   int Number;
   for (int i = 0; i < prefix.length();i++){
@@ -209,6 +215,8 @@ void DisMsg (String prefix, String msg)
 }
 
 void clearDisplay(){
+  digitalWrite(RED, LOW);
+  digitalWrite(GREEN, LOW);
   for (int Digit = 4; Digit>0;Digit--){
     Send7SEG(Digit,0x00); 
   }
