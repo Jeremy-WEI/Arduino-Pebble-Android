@@ -4,6 +4,7 @@ using namespace std;
 
 #define DURATION 3600
 
+
 double getAverage(int);
 double getLow(int);
 double getHigh(int);
@@ -110,42 +111,52 @@ void* startServer(void* p)
         stringstream reply;
         reply << "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
 
+        //no arduino connection. reply with "Arduino Not Connected"
         if (fd == -1) {
             reply << "{\n\"msg\": \"Arduino Not Connected.\"\n}\n";
         }
         else {
             char *token = strtok(request, " ");
             token = strtok(NULL, " ");
+            //get the GET information
             string command(token + 1);
+            //request asks for current temperature
             if (command == "curTemp") {
                 sendTemp(reply, "Current Temperature is", getMostRecent(), isCelsius);      
             } 
             else if (command == "temps") {
                 sendTemps(reply, isCelsius);
             }
+            //request asks for average temperature
             else if (command == "avgTemp") {
                 sendTemp(reply, "Average Temperature is", getAverage(DURATION), isCelsius);
-            }        
+            }       
+            //request asks for highest temperature 
             else if (command == "highTemp") {
                 sendTemp(reply, "The Highest Temperature is", getHigh(DURATION), isCelsius);
-            }        
+            }      
+            //request asks for lowest temperature   
             else if (command == "lowTemp") {
                 sendTemp(reply, "The Lowest Temperature is", getLow(DURATION), isCelsius);
             } 
+            //Showing temperature in Fahrenheit
             else if (command == "showF") {
                 isCelsius = false;
                 reply << "{\n\"msg\": \"Temperature Now in Fahrenheit.\"\n}\n";
                 write(fd, "f", 1);
-            }        
+            }      
+            //Showing temperature in Celsius  
             else if (command == "showC") {
                 isCelsius = true;
                 reply << "{\n\"msg\": \"Temperature Now in Celsius.\"\n}\n";
                 write(fd, "c", 1);
             }        
+            //Put arduino in standby mode
             else if (command == "stop") {
                 reply << "{\n\"msg\": \"Temperature Reporting Stopped.\"\n}\n";
                 write(fd, "s", 1);
             }        
+            //Resume arduino
             else if (command == "resume") {
                 reply << "{\n\"msg\": \"Temperature Reporting Resumed.\"\n}\n";
                 write(fd, "r", 1);
@@ -175,7 +186,7 @@ void* startServer(void* p)
     return 0;
 }
 
-
+// Read temperature from Arduino
 void* getTem(void* p) {
     try {
         struct termios options;
@@ -230,10 +241,12 @@ void* getTem(void* p) {
     return NULL;
 }
 
+//change from celsius to Fahrenheit
 double CToF(double cTemp) {
     return cTemp * 1.8 + 32.0;
 }
 
+//get the most recent temperature
 double getMostRecent() {
     pthread_mutex_lock(&lock2);
     double b =  temps[temps.size() - 1].temp;
@@ -241,6 +254,7 @@ double getMostRecent() {
     return b;
 }
 
+//get the lowest or highest temperature
 double getExtreme(int duration, bool isHigh) {
     double extreme = getMostRecent();
     pthread_mutex_lock(&lock2);
@@ -267,14 +281,18 @@ double getExtreme(int duration, bool isHigh) {
     return extreme;
 }
 
+
+//get low temperature
 double getLow(int duration) {    
     return getExtreme(duration, false);
 }
 
+//get high temperature
 double getHigh(int duration) {
     return getExtreme(duration, true);
 }
 
+//get average temperature
 double getAverage(int duration) {
     double sum = 0;
     int count = 0;
@@ -296,6 +314,7 @@ double getAverage(int duration) {
     return sum/count;
 }
 
+//append the temperature information to the body of http response
 void sendTemp(stringstream& reply, string msg, double temp, bool isCelsius) {
     if (!isCelsius) 
         temp = CToF(temp);

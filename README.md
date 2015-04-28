@@ -1,4 +1,5 @@
 # Arduino-Pebble-Android
+
 CIT 595 Project
 =====================================
 Additional Features:
@@ -7,10 +8,10 @@ Additional Features:
 
 2. Show Temperature Statistics on Pebble Watch
 
-3. Change sensor colleting rate 
+3. Display Temperature History on PebbleWatch
 
-4. Give clothing suggestion according to current temperatere
+4. Loop up Yahoo! stock price and show on bother PebbleWatch and Ardunio
 
-5. Remotely shut down server on pebble watch
+5. Query Philly weather report
 
 =====================================
