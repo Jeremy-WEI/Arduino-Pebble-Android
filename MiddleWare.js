@@ -1,3 +1,9 @@
+
+/*
+ * Listener for listening incoming message from pebble watch.
+ * weather is used for querying Philly's weather.
+ * stock is used for querying Yahoo! stock price.
+ */
 Pebble.addEventListener("appmessage",
     function(e) {
         //     console.log(JSON.stringify(e.payload));
@@ -10,9 +16,13 @@ Pebble.addEventListener("appmessage",
             sendToServer(e.payload[0]);
     });
 
+
 var ipAddress = "158.130.212.105"; // Hard coded IP address
 var port = "3001"; // Same port specified as argument to server
 
+/*
+ * send message to our server for querying different temperatures.
+ */
 function sendToServer(param) {
 
     var req = new XMLHttpRequest();
@@ -34,21 +44,19 @@ function sendToServer(param) {
             "0": msg
         });
     };
+  // Error handler: e.g. when server is not responsing..
     req.onerror = function () {
       Pebble.sendAppMessage({
             "0": "Connection Failed. Server is not Available."
         });
     };
     req.open(method, url, async);  
-//     req.timeout = 3000;
-//     req.ontimeout = function () {
-//       Pebble.sendAppMessage({
-//             "0": "Connection Failed. Server is not Available."
-//         });
-//     };
     req.send(null);
 }
 
+/*
+ * send message to our server without handling the response from server. 
+ */
 function sendToServerNoResponse(msg) {
     var req = new XMLHttpRequest();
     var url = "http://" + ipAddress + ":" + port + "/" + msg;
@@ -58,17 +66,14 @@ function sendToServerNoResponse(msg) {
     req.send(null);
 }
 
+/*
+ * send message to query Philly's weather report and send result to both our server and Pebble watch.
+ */
 function queryWeather() {
     var req = new XMLHttpRequest();
     var url = "http://api.openweathermap.org/data/2.5/weather?zip=19104%2Cus";
     var method = "GET";
     var async = true;
-  
-//     req.ontimeout = function () {
-//       Pebble.sendAppMessage({
-//             "0": "Connection Failed. Server is not Available."
-//         });
-//     };
 
     req.onload = function(e) {
         // see what came back
@@ -88,28 +93,25 @@ function queryWeather() {
             "0": msg
         });
     };
+    // Error handler: e.g. when server is not responsing..
     req.onerror = function () {
       Pebble.sendAppMessage({
             "0": "Connection Failed. Server is not Available."
         });
     };
     req.open(method, url, async);
-//     req.timeout = 3000;
     req.send(null);
 }
 
+/*
+ * send message to query Yahoo! stock price and send result to both our server and Pebble watch.
+ */
 function queryStock() {
     var req = new XMLHttpRequest();
     var url = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quote%20where%20symbol%20in%20(%22YHOO%22)&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=";
     var method = "GET";
     var async = true;
     console.log('Send Request');
-  
-//     req.ontimeout = function () {
-//       Pebble.sendAppMessage({
-//             "0": "Connection Failed. Server is not Available."
-//         });
-//     };
 
     req.onload = function(e) {
         // see what came back
@@ -128,12 +130,12 @@ function queryStock() {
             "0": msg
         });
     };
+    // Error handler: e.g. when server is not responsing..
     req.onerror = function () {
       Pebble.sendAppMessage({
             "0": "Connection Failed. Server is not Available."
         });
     };
     req.open(method, url, async);
-//     req.timeout = 3000;
     req.send(null);
 }

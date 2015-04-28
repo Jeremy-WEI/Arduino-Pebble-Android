@@ -2,6 +2,11 @@
 #include <string.h>
 #include <stdlib.h> 
 
+/*
+ * MENU CONSTANTS for app menu.
+ * We use constants so we can esaily modify the menu without bothering to modify code elsewhere.
+ */
+
 #define NUM_MENU_SECTIONS 4
 #define NUM_MENU_ICONS 3
 #define NUM_FIRST_MENU_ITEMS 5
@@ -16,6 +21,9 @@ static double numbers[10];
 static MenuLayer *s_menu_layer;
 static GBitmap *s_menu_icons[NUM_MENU_ICONS];
 
+/*
+ * A custom debug function, mainly for error log.
+ */
 char *translate_error(AppMessageResult result) {
     switch (result) {
         case APP_MSG_OK: return "APP_MSG_OK";
@@ -36,6 +44,10 @@ char *translate_error(AppMessageResult result) {
     }
 }
 
+/*
+ * Callback function to update the graphic layer with custom msg text.
+ * This function is also drawing the border of graphic layer for better UI.
+ */
 static void layer_text_update_callback(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
   int height = bounds.size.h - 10;
@@ -55,6 +67,13 @@ static void layer_text_update_callback(Layer *layer, GContext *ctx) {
   );
 }
 
+/*
+ * Function to convert a number string to a double.
+ * C build-in atof function is not supported on this version of CloudPebble.
+ * Param:
+ * @number: string representation of number
+ * return: double
+ */
 static double myatof(char *number) {
   double res = 0;
   char num[5];
@@ -74,6 +93,9 @@ static double myatof(char *number) {
   return res;
 }
 
+/*
+ * Callback function to update the graphic layer with temperature history.
+ */
 static void layer_graph_update_callback(Layer *layer, GContext *ctx) {
   GRect bounds = layer_get_bounds(layer);
   int height = bounds.size.h - 10;
@@ -82,7 +104,6 @@ static void layer_graph_update_callback(Layer *layer, GContext *ctx) {
   graphics_draw_line(ctx, GPoint(2, 2), GPoint(width + 8, 2));
   graphics_draw_line(ctx, GPoint(2, height + 8), GPoint(width + 8, height + 8));
   graphics_draw_line(ctx, GPoint(width + 8, 2), GPoint(width + 8, height + 8));
-//   char buf[] = "60.21,67.21,25.21,90.21,61.21,44.21,50.21,61.21,30.21,70.00,";
   char number[10];
   int len = strlen(msg);
   for (int i = 0, k = 0, j = 0; i < len; i++) {
@@ -112,6 +133,11 @@ static void layer_graph_update_callback(Layer *layer, GContext *ctx) {
   graphics_context_set_stroke_color(ctx, GColorBlack);
 }
 
+/*
+ * send out msg to cell phone.
+ * Param:
+ * @param: msg to send out.
+ */
 void send_outbox(char *param) {
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
@@ -121,6 +147,12 @@ void send_outbox(char *param) {
     app_message_outbox_send();
 }
 
+/*
+ * A wrapper function for sending message to cell phone and update the graphic layer with message.
+ * Param:
+ * @msg1: message to send out
+ * @msg2: message to display on the screen.
+ */
 static void send_message(char *msg1, char *msg2) {
   send_outbox(msg1);
   strcpy(msg, msg2);
@@ -128,6 +160,11 @@ static void send_message(char *msg1, char *msg2) {
   layer_mark_dirty(canvas_layer);
 }
 
+/*
+ * A wrapper function for updating the graphic layer with message.
+ * Param:
+ * @message: message to display on the screen.
+ */
 static void show_message(char *message) {
   strcpy(msg, message);
   layer_set_update_proc(canvas_layer, layer_text_update_callback);
@@ -175,6 +212,9 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
     }
 }
 
+/*
+ * draw menu call back function.
+ */
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
     // Determine which section we're going to draw in
     switch (cell_index->section) {
@@ -233,20 +273,27 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 }
 
 
-
+/*
+ * Display text on screen when message successfuly sends out.
+ */
 void out_sent_handler(DictionaryIterator *sent, void *context) {
     // outgoing message was delivered -- do nothing
     show_message("Waiting...");
 }
 
-
+/*
+ * Display text on screen when message failed to sends out.
+ */
 void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
     // outgoing message failed
     APP_LOG(APP_LOG_LEVEL_DEBUG, "In dropped: %i - %s", reason, translate_error(reason));
     show_message("Ooops! Message not sent successfully.");
 }
 
-
+/*
+ * Call back function when message comes in.
+ * Add short vibrate when message comes in.
+ */
 void in_received_handler(DictionaryIterator *received, void *context) {
     //    incoming message received
     //    looks for key #0 in the incoming message
@@ -274,6 +321,9 @@ void in_received_handler(DictionaryIterator *received, void *context) {
     vibes_short_pulse();
 }
 
+/*
+ * Call back function when message drops.
+ */
 void in_dropped_handler(AppMessageResult reason, void *context) {
     //    incoming message dropped
     show_message("Error Handling Incoming Message!");
