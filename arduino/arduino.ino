@@ -182,8 +182,16 @@ void loop()
 void DisMsg (String prefix, String msg)
 {
   if (msg.charAt(0)=='s') { // stock
-  if (msg.charAt(3)=='-') digitalWrite(RED, HIGH);  
-  else digitalWrite(GREEN, HIGH);
+  if (msg.charAt(3)=='-') { 
+    digitalWrite(GREEN, LOW);
+    digitalWrite(BLUE, LOW);
+    digitalWrite(RED, HIGH);
+  }  
+  else {
+    digitalWrite(RED, LOW);
+    digitalWrite(BLUE, LOW);
+    digitalWrite(GREEN, HIGH);
+  }
   msg = msg.substring(4);
   } else {  // temp
     msg = msg.substring(3);
